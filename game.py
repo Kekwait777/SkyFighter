@@ -2,7 +2,6 @@ import pygame
 import random
 from pygame import mixer
 
-
 WIDTH = 1200
 HEIGHT = 700
 FPS = 60
@@ -15,7 +14,7 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 
 pygame.init()
-mixer.init()
+pygame.mixer.init()
 pygame.font.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("SkyFighter")
@@ -61,6 +60,7 @@ class Player(pygame.sprite.Sprite):
             for bullet in enemy_bullets:
                 if is_collided_with(self, bullet):
                     self.start_ticks = pygame.time.get_ticks()
+                    sound_mixer.sounds["small_expl_sound"].play(0)
                     if not self.invul:
                         self.take_damage()
                         self.invul = True
@@ -72,6 +72,7 @@ class Player(pygame.sprite.Sprite):
         self.lives -= 1
 
     def die(self):
+        sound_mixer.sounds["big_expl_sound" + str(random.randint(1, 2))].play(0)
         animation(self, big_explosion, 30, False)
 
     def shoot(self):
@@ -113,6 +114,7 @@ class Enemy(pygame.sprite.Sprite):
             animation(self, big_explosion, 30, False)
         for bullet in our_bullets:
             if is_collided_with(self, bullet):
+                sound_mixer.sounds["big_expl_sound"+str(random.randint(1,2))].play(0)
                 self.die()
                 break
 
@@ -284,6 +286,7 @@ class Button:
     def click(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         if self.rect.left < mouse_x < self.rect.left + self.rect.width and self.rect.top < mouse_y < self.rect.top + self.rect.height:
+            sound_mixer.sounds["tv_sound_buttons"].play(0)
             self.on = not self.on
             if not self.on:
                 if not self.func1 == 0:
@@ -307,18 +310,15 @@ class Sound_button:
         self.rect.x = x
         self.rect.y = y
         self.dest = dest
-        self.change_volume = 0
 
     def click(self):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         if self.rect.left < mouse_x < self.rect.left + self.rect.width and self.rect.top < mouse_y < self.rect.top + self.rect.height:
+            sound_mixer.sounds["tv_sound_buttons"].play(0)
             if self.dest == "+":
-                self.change_volume += 0.05
-                print(self.change_volume, pygame.mixer.music.get_volume())
+                sound_mixer.volume += 0.01
             if self.dest == "-":
-                self.change_volume -= 0.05
-                print(self.change_volume, pygame.mixer.music.get_volume())
-            pygame.mixer.music.set_volume(1.0 + self.change_volume)
+                sound_mixer.volume -= 0.01
 
     def update(self):
         screen.blit(self.image, self.rect)
@@ -345,6 +345,24 @@ class Spawner:
     def get_i(self):
         return self.i
 
+class Sound_mixer():
+    def __init__(self):
+        self.volume = 0.1
+        self.sounds = {"background_music": self.load_sound("background_music"),
+                       "shoot_sound": self.load_sound("shoot_sound"),
+                       "tv_sound_buttons": self.load_sound("tv_sound_buttons"),
+                       "small_expl_sound": self.load_sound("small_expl_sound"),
+                       "big_expl_sound1": self.load_sound("big_expl_sound1"),
+                       "big_expl_sound2": self.load_sound("big_expl_sound2"),
+                       "game_over_sound": self.load_sound("game_over_sound")}
+
+    def load_sound(self, name):
+        return pygame.mixer.Sound("venv\\Sounds\\" + name + ".wav")
+
+    def update(self):
+        mixer.music.set_volume(self.volume)
+        for sound in self.sounds.keys():
+            self.sounds[sound].set_volume(self.volume)
 
 def animation(Entity, images, speed, endless):
     now = pygame.time.get_ticks()
@@ -392,7 +410,7 @@ def load_images(name, count, scale):
 
 
 def print_text(text, size, color, x, y):
-    font = pygame.font.Font("venv\\Sprites\\MinecraftFont.ttf", size)
+    font = pygame.font.Font("venv\\Fonts\\MinecraftFont.ttf", size)
     screen.blit(font.render(text, True, color), (x, y))
 
 
@@ -401,7 +419,6 @@ enemy_images = load_images("enemy_plane", 3, 120)
 small_explosion = load_images("small_explosion", 9, 50)
 big_explosion = load_images("big_explosion", 9, 120)
 button_images = load_images("button_pos", 2, 110)
-#button_sound_up_image = pygame.transform.scale(pygame.image.load("venv\\Sprites\\button_sound_up.png").convert_alpha(),(120, 120))
 button_sound_images = load_images("button_sound", 2, 120)
 main_screen_images = load_images("main_screen", 38, 0)
 live_image = pygame.image.load("venv\\Sprites\\our_plane_lives.png").convert_alpha()
@@ -417,6 +434,7 @@ all_sprites = pygame.sprite.Group()
 our_bullets = pygame.sprite.Group()
 enemy_bullets = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
+sound_mixer = Sound_mixer()
 player = Player()
 spawner = Spawner()
 scores = Scores()
@@ -428,16 +446,17 @@ exit_button = Button(945, 250, Tv.TV_off, Tv.TV_on)
 sound_up_button = Sound_button(818, 95, button_sound_images[0], "+")
 sound_down_button = Sound_button(818, 205, button_sound_images[1], "-")
 
-
-pygame.mixer.init(22050, -16, 2, 2048)
-pygame.mixer.music.set_volume(0.2)
-song = mixer.music.load("venv\\Sprites\\CAIN.mp3")
-mixer.music.play(0)
+mixer.music.load("venv\\Sounds\\bg_music.mp3")
+mixer.music.set_volume(0.2)
+mixer.music.play(-1)
 
 running = True
+
 while running:
     clock.tick(FPS)
     for event in pygame.event.get():
+        sound_mixer.update()
+
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.constants.MOUSEBUTTONDOWN:
@@ -448,6 +467,7 @@ while running:
         elif event.type == pygame.KEYDOWN and not main_screen.in_main_screen:
             if event.key == pygame.K_SPACE and player.lives > 0 and not PAUSED:
                 player.shoot()
+                sound_mixer.sounds["shoot_sound"].play(0)
             if event.key == pygame.K_ESCAPE and not GAME_OVER:
                 PAUSED = not PAUSED
     if not main_screen.in_main_screen:
@@ -466,9 +486,9 @@ while running:
 
         if player.lives < 1 and GAME_OVER == False:
             GAME_OVER = True
+            sound_mixer.sounds["game_over_sound"].play(0)
             start_ticks = pygame.time.get_ticks()
         screen.blit(background, background_rect)
-
         if not PAUSED:
             spawner.update()
             all_sprites.update()
@@ -498,10 +518,10 @@ while running:
 
     Tv.update()
     screen.blit(Tv.image, Tv.rect)
+    print_text(str(int(clock.get_fps())), 10, WHITE, 5,5)
     start_button.update()
     exit_button.update()
     sound_up_button.update()
     sound_down_button.update()
     pygame.display.flip()
 
-pygame.quit()
