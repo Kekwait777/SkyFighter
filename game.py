@@ -1,3 +1,6 @@
+import os
+import sys
+
 import pygame
 import random
 from pygame import mixer
@@ -12,6 +15,11 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
+
+def resource_path(relative):
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative)
+    return os.path.join(relative)
 
 pygame.init()
 pygame.mixer.init()
@@ -79,7 +87,7 @@ class Player(pygame.sprite.Sprite):
         bullet = Our_bullet(self.rect.centerx + 20, self.rect.top + 80, -20)
         all_sprites.add(bullet)
         our_bullets.add(bullet)
-
+        sound_mixer.sounds["shoot_sound"].play(0)
         bullet = Our_bullet(self.rect.centerx - 20, self.rect.top + 80, -20)
         all_sprites.add(bullet)
         our_bullets.add(bullet)
@@ -119,13 +127,15 @@ class Enemy(pygame.sprite.Sprite):
                 break
 
     def die(self):
-        scores.scores = 1 + spawner.i
+        print("Enemy: ", scores.scores, 1 + spawner.i)
+        scores.scores += 1 + spawner.i
         self.is_alive = False
 
     def shoot(self):
         bullet = Enemy_bullet(self.rect.centerx + 20, self.rect.top + 100, 15)
         all_sprites.add(bullet)
         enemy_bullets.add(bullet)
+        sound_mixer.sounds["shoot_sound"].play(0)
         bullet = Enemy_bullet(self.rect.centerx - 20, self.rect.top + 100, 15)
         all_sprites.add(bullet)
         enemy_bullets.add(bullet)
@@ -357,7 +367,8 @@ class Sound_mixer():
                        "game_over_sound": self.load_sound("game_over_sound")}
 
     def load_sound(self, name):
-        return pygame.mixer.Sound("venv\\Sounds\\" + name + ".wav")
+        path = resource_path(os.path.join("venv\\Sounds\\", name + ".wav"))
+        return pygame.mixer.Sound(path)
 
     def update(self):
         mixer.music.set_volume(self.volume)
@@ -395,14 +406,14 @@ def load_images(name, count, scale):
     if scale == 0:
         for i in range(count):
             try:
-                array.append(pygame.image.load("venv\\Sprites\\" + str(name) + str(i + 1) + ".png").convert_alpha())
+                array.append(pygame.image.load(resource_path(os.path.join("venv\\Sprites\\", str(name) + str(i + 1) + ".png"))).convert_alpha())
             except Warning:
                 print(Warning)
     else:
         for i in range(count):
             try:
                 array.append(pygame.transform.scale(
-                    pygame.image.load("venv\\Sprites\\" + str(name) + str(i + 1) + ".png").convert_alpha(), (scale, scale)))
+                    pygame.image.load(resource_path(os.path.join("venv\\Sprites\\", str(name) + str(i + 1) + ".png"))).convert_alpha(), (scale, scale)))
             except Warning:
                 print(Warning)
 
@@ -410,7 +421,7 @@ def load_images(name, count, scale):
 
 
 def print_text(text, size, color, x, y):
-    font = pygame.font.Font("venv\\Fonts\\MinecraftFont.ttf", size)
+    font = pygame.font.Font(resource_path(os.path.join("venv\\Fonts\\","MinecraftFont.ttf")), size)
     screen.blit(font.render(text, True, color), (x, y))
 
 
@@ -421,11 +432,11 @@ big_explosion = load_images("big_explosion", 9, 120)
 button_images = load_images("button_pos", 2, 110)
 button_sound_images = load_images("button_sound", 2, 120)
 main_screen_images = load_images("main_screen", 38, 0)
-live_image = pygame.image.load("venv\\Sprites\\our_plane_lives.png").convert_alpha()
+live_image = pygame.image.load(resource_path(os.path.join("venv\\Sprites\\", "our_plane_lives.png"))).convert_alpha()
 live_image.set_alpha(200)
 tv = load_images("TV_", 3, 0)
 tv_onoff_images = load_images("TV_onoff", 11, 0)
-bullet_img = pygame.image.load("venv\\Sprites\\bullet.png").convert_alpha()
+bullet_img = pygame.image.load(resource_path(os.path.join("venv\\Sprites\\","bullet.png"))).convert_alpha()
 background = main_screen_images[0]
 background_rect = background.get_rect()
 background_rect.x += 100
@@ -446,7 +457,7 @@ exit_button = Button(945, 250, Tv.TV_off, Tv.TV_on)
 sound_up_button = Sound_button(818, 95, button_sound_images[0], "+")
 sound_down_button = Sound_button(818, 205, button_sound_images[1], "-")
 
-mixer.music.load("venv\\Sounds\\bg_music.mp3")
+mixer.music.load(resource_path(os.path.join("venv\\Sounds\\","bg_music.mp3")))
 mixer.music.set_volume(0.2)
 mixer.music.play(-1)
 
@@ -467,7 +478,6 @@ while running:
         elif event.type == pygame.KEYDOWN and not main_screen.in_main_screen:
             if event.key == pygame.K_SPACE and player.lives > 0 and not PAUSED:
                 player.shoot()
-                sound_mixer.sounds["shoot_sound"].play(0)
             if event.key == pygame.K_ESCAPE and not GAME_OVER:
                 PAUSED = not PAUSED
     if not main_screen.in_main_screen:
@@ -479,7 +489,6 @@ while running:
             enemies = pygame.sprite.Group()
             player = Player()
             spawner = Spawner()
-            scores = Scores()
             lives_panel = Lives_panel()
             all_sprites.add(player)
             GAME_STARTED = True
@@ -524,4 +533,4 @@ while running:
     sound_up_button.update()
     sound_down_button.update()
     pygame.display.flip()
-
+sys.exit()
