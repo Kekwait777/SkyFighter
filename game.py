@@ -127,8 +127,8 @@ class Enemy(pygame.sprite.Sprite):
                 break
 
     def die(self):
-        print("Enemy: ", scores.scores, 1 + spawner.i)
-        scores.scores += 1 + spawner.i
+        print("Enemy: ", scores_.scores, 1 + spawner.i)
+        scores_.scores += 1 + spawner.i
         self.is_alive = False
 
     def shoot(self):
@@ -259,6 +259,7 @@ class TV:
             if not off is None:
                 self.off_animation = off
                 self.image = tv_onoff_images[0]
+                pygame.quit()
 
     def TV_game_start(self):
         main_screen.in_main_screen = False
@@ -281,6 +282,7 @@ class TV:
         self.on_animation = False
         self.idle = False
         self.off_animation = True
+
 
 
 class Button:
@@ -448,7 +450,7 @@ enemies = pygame.sprite.Group()
 sound_mixer = Sound_mixer()
 player = Player()
 spawner = Spawner()
-scores = Scores()
+scores_ = Scores()
 lives_panel = Lives_panel()
 Tv = TV()
 main_screen = Main_screen()
@@ -505,7 +507,7 @@ while running:
         all_sprites.draw(screen)
         lives_panel.update()
         screen.blit(lives_panel.image, lives_panel.rect)
-        scores.update()
+        scores_.update()
 
         if PAUSED:
             print_text("PAUSE", 50, WHITE, 500, 80)
