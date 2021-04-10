@@ -385,7 +385,20 @@ class About_us():
     def __init__(self):
         self.rect = pygame.Rect(940, 385, 160, 20)
         self.in_view = False
-        self.authors = [Info_node(x=200, y=100),Info_node(x=500, y=200),Info_node(x=200, y=300)]
+        self.authors = [Info_node(x=200, y=100, header="Kira Beznik",
+                                  main=["telegram"],
+                                  links=["https://web.telegram.org/#/im?p=@Maldictiales"]),
+                        Info_node(x=500, y=300, header="RusKom",
+                                  main=["telegram"],
+                                  links=["https://web.telegram.org/#/im?p=@RusK0m"]),
+                        Info_node(x=200, y=500, header="Miracyber",
+                                  main=["telegram"],
+                                  links=["https://web.telegram.org/#/im?p=@Bruuh228"])]
+
+        self.images = [[storage.background, storage.background_rect],
+                       [storage.authors_images[0],(400,70, 200, 200)],
+                       [storage.authors_images[1],(200,270, 200, 200)],
+                       [storage.authors_images[2],(400,470, 200, 200)]]
 
     def update(self):
         print_text("CREDITS", storage.font16, WHITE, self.rect.x+47, self.rect.y)
@@ -402,7 +415,8 @@ class About_us():
 
 
     def draw(self):
-        screen.blit(storage.background,storage.background_rect)
+        for image in self.images:
+            screen.blit(image[0],image[1])
         for author in self.authors:
             author.draw()
 
@@ -456,6 +470,7 @@ class Storage:
         self.button_images = load_images("button_pos", 2, 110)
         self.button_sound_images = load_images("button_sound", 2, 120)
         self.main_screen_images = load_images("main_screen", 38, 0)
+        self.authors_images = load_images("chibi", 3, 200)
         self.live_image = pygame.image.load(resource_path(os.path.join("venv\\Sprites\\", "our_plane_lives.png"))).convert_alpha()
         self.live_image.set_alpha(200)
         self.tv = load_images("TV_", 3, 0)
@@ -465,10 +480,10 @@ class Storage:
         self.background_rect = self.background.get_rect()
         self.background_rect.x += 100
         font_path = resource_path(os.path.join("venv\\Fonts\\","MinecraftFont.ttf"))
-        self.font10 = [pygame.font.Font(font_path, 10), pygame.font.Font(font_path, 11)]
-        self.font16 = [pygame.font.Font(font_path, 16), pygame.font.Font(font_path, 17)]
-        self.font25 = [pygame.font.Font(font_path, 25), pygame.font.Font(font_path, 26)]
-        self.font50 = [pygame.font.Font(font_path, 50), pygame.font.Font(font_path, 51)]
+        self.font10 = pygame.font.Font(font_path, 10)
+        self.font16 = pygame.font.Font(font_path, 16)
+        self.font25 = pygame.font.Font(font_path, 25)
+        self.font50 = pygame.font.Font(font_path, 50)
 # метод для проигрывания анимации
 def animation(Entity, images, speed, endless):
     now = pygame.time.get_ticks()
@@ -520,9 +535,9 @@ def load_images(name, count, scale):
 
 # метод для отображения текста на экране
 def print_text(text, font, color, x, y):
-    screen.blit(font[0].render(text, True, BLACK), (x-1, y+1))
-    screen.blit(font[0].render(text, True, color), (x, y))
-    return font[0].render(text, True, color).get_rect()
+    screen.blit(font.render(text, True, BLACK), (x-1, y+1))
+    screen.blit(font.render(text, True, color), (x, y))
+    return font.render(text, True, color).get_rect()
 
 
 # создание обьектов и распределение их по группам
