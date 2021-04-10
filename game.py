@@ -1,6 +1,7 @@
 # импорт нужных библиотек
 import os
 import sys
+import webbrowser
 
 import pygame
 import random
@@ -105,7 +106,7 @@ class Enemy(pygame.sprite.Sprite):
         self.image = storage.enemy_images[0]
         self.rect = self.image.get_rect()
         self.rect.centerx = WIDTH / 2 - 180 + x
-        self.rect.bottom = HEIGHT - 700
+        self.rect.bottom = HEIGHT - 650
         self.attack_speed = attack_speed
         self.speedy = 1.5
         self.last_sprite_update = pygame.time.get_ticks()
@@ -221,7 +222,7 @@ class Scores:
         self.scores = 0
 
     def update(self):
-        print_text("SCORES: " + str(self.scores), 25, WHITE, 150, 100)
+        print_text("SCORES: " + str(self.scores), storage.font25, WHITE, 150, 100)
 
 # класс главного экрана
 class Main_screen:
@@ -236,6 +237,8 @@ class Main_screen:
     def update(self):
         if self.in_main_screen:
             animation(self,storage.main_screen_images, 50, True)
+    def draw(self):
+        screen.blit(self.image, self.rect)
 
 # класс телевизора(анимация ряби, включение и выключение экрана)
 class TV:
@@ -265,6 +268,7 @@ class TV:
 
     def TV_game_start(self):
         main_screen.in_main_screen = False
+        about_us.in_view = False
         self.on_animation = True
         self.idle = False
         self.off_animation = False
@@ -297,8 +301,9 @@ class Button:
         self.func1 = func1
         self.func2 = func2
 
+
     def click(self):
-        if is_pressed_by_mouse(self):
+        if is_mouse_on_rect(self.rect):
             sound_mixer.sounds["tv_sound_buttons"].play(0)
             self.on = not self.on
             if not self.on:
@@ -324,8 +329,9 @@ class Sound_button:
         self.rect.y = y
         self.dest = dest
 
+
     def click(self):
-        if is_pressed_by_mouse(self):
+        if is_mouse_on_rect(self.rect):
             sound_mixer.sounds["tv_sound_buttons"].play(0)
             if self.dest == "+":
                 sound_mixer.volume += 0.01
@@ -374,6 +380,72 @@ class Sound_mixer():
         mixer.music.set_volume(self.volume)
         for sound in self.sounds.keys():
             self.sounds[sound].set_volume(self.volume)
+
+class About_us():
+    def __init__(self):
+        self.rect = pygame.Rect(940, 385, 160, 20)
+        self.in_view = False
+        self.authors = [Info_node(x=200, y=100),Info_node(x=500, y=200),Info_node(x=200, y=300)]
+
+    def update(self):
+        print_text("CREDITS", storage.font16, WHITE, self.rect.x+47, self.rect.y)
+
+    def click(self):
+        if is_mouse_on_rect(self.rect):
+            sound_mixer.sounds["tv_sound_buttons"].play(0)
+            if self.in_view:
+                self.in_view = False
+                main_screen.in_main_screen = True
+            else:
+                self.in_view = True
+                start_button.on = True
+
+
+    def draw(self):
+        screen.blit(storage.background,storage.background_rect)
+        for author in self.authors:
+            author.draw()
+
+class Info_node():
+    def __init__(self, header="HEADER", main=None, links=None, x=100, y=100):
+        if main is None:
+            main = ["youtube", "second"]
+        if links is None:
+            links = ["https://www.youtube.com", ""]
+        self.rect = pygame.Rect(x, y, 100, 100)
+        self.header = header
+        self.main = main.copy()
+        self.main_rects = []
+        for _ in main:
+            self.main_rects.append(pygame.Rect)
+        self.links = links
+
+    def draw(self):
+        print_text(self.header, storage.font25, WHITE, self.rect.x, self.rect.y)
+        for info in range(len(self.main)):
+            self.main_rects[info] = print_text(self.main[info], storage.font16, WHITE, self.rect.x, (self.rect.y + 40) + 19 * info)
+            self.main_rects[info].x = self.rect.x
+            self.main_rects[info].y = (self.rect.y + 40) + 19 * info
+            self.is_focused(self.main_rects[info].copy())
+
+    def is_focused(self, rect):
+        if is_mouse_on_rect(rect):
+            rect.height = 2
+            rect.y += 17
+            rect.x -= 1
+            pygame.draw.rect(screen, BLACK, rect, 1)
+            rect.x += 1
+            rect.y -= 1
+            pygame.draw.rect(screen, WHITE, rect, 1)
+
+
+    def click(self):
+        for rect in range(len(self.main_rects)):
+            if type(self.main_rects[rect]) == type(self.rect):
+                if is_mouse_on_rect(self.main_rects[rect]):
+                    sound_mixer.sounds["tv_sound_buttons"].play(0)
+                    if not self.links[rect] == "":
+                        webbrowser.open_new_tab(self.links[rect])
 # класс для загрузки всех спрайтов
 class Storage:
     def __init__(self):
@@ -392,6 +464,11 @@ class Storage:
         self.background = self.main_screen_images[0]
         self.background_rect = self.background.get_rect()
         self.background_rect.x += 100
+        font_path = resource_path(os.path.join("venv\\Fonts\\","MinecraftFont.ttf"))
+        self.font10 = [pygame.font.Font(font_path, 10), pygame.font.Font(font_path, 11)]
+        self.font16 = [pygame.font.Font(font_path, 16), pygame.font.Font(font_path, 17)]
+        self.font25 = [pygame.font.Font(font_path, 25), pygame.font.Font(font_path, 26)]
+        self.font50 = [pygame.font.Font(font_path, 50), pygame.font.Font(font_path, 51)]
 # метод для проигрывания анимации
 def animation(Entity, images, speed, endless):
     now = pygame.time.get_ticks()
@@ -418,9 +495,9 @@ def animation(Entity, images, speed, endless):
 def is_collided_with(self, sprite):
     return self.rect.colliderect(sprite.rect)
 
-def is_pressed_by_mouse(Entity):
+def is_mouse_on_rect(rect):
     mouse_x, mouse_y = pygame.mouse.get_pos()
-    return Entity.rect.left < mouse_x < Entity.rect.left + Entity.rect.width and Entity.rect.top < mouse_y < Entity.rect.top + Entity.rect.height
+    return rect.left < mouse_x < rect.left + rect.width and rect.top < mouse_y < rect.top + rect.height
 
 # метод для загрузки нескольких спрайтов в массив
 def load_images(name, count, scale):
@@ -442,9 +519,10 @@ def load_images(name, count, scale):
     return array
 
 # метод для отображения текста на экране
-def print_text(text, size, color, x, y):
-    font = pygame.font.Font(resource_path(os.path.join("venv\\Fonts\\","MinecraftFont.ttf")), size)
-    screen.blit(font.render(text, True, color), (x, y))
+def print_text(text, font, color, x, y):
+    screen.blit(font[0].render(text, True, BLACK), (x-1, y+1))
+    screen.blit(font[0].render(text, True, color), (x, y))
+    return font[0].render(text, True, color).get_rect()
 
 
 # создание обьектов и распределение их по группам
@@ -460,6 +538,7 @@ scores_ = Scores()
 lives_panel = Lives_panel()
 Tv = TV()
 main_screen = Main_screen()
+about_us = About_us()
 
 # создание кнопок меню
 start_button = Button(945, 100, Tv.TV_game_start, Tv.TV_back_to_main)
@@ -489,6 +568,9 @@ while running:
             exit_button.click()
             sound_up_button.click()
             sound_down_button.click()
+            about_us.click()
+            for link in about_us.authors:
+                link.click()
         # если нажата кнопка на клавиатуре и игра не на главном экране
         elif event.type == pygame.KEYDOWN and not main_screen.in_main_screen:
             # если пробел и игра не на паузе, то игрок может стрелять
@@ -497,8 +579,9 @@ while running:
             # если ESCAPE, то поставить игру на паузу
             if event.key == pygame.K_ESCAPE and not GAME_OVER:
                 PAUSED = not PAUSED
+
     # если игра не на главном экране
-    if not main_screen.in_main_screen:
+    if not main_screen.in_main_screen and not about_us.in_view:
         # если игра не была ранее запущена, то запустить
         if not GAME_STARTED:
             Tv.on_animation = True
@@ -532,11 +615,11 @@ while running:
 
         # если игра на паузе отрисовывать слово PAUSED в углу
         if PAUSED:
-            print_text("PAUSE", 50, WHITE, 500, 80)
+            print_text("PAUSE", storage.font50, WHITE, 500, 80)
         # если игра не на паузе и игра закончена
         elif not PAUSED and GAME_OVER:
             # отрысовываем GAME OVER в центре экрана и ждать три секунды
-            print_text("GAME OVER", 50, WHITE, 250, 300)
+            print_text("GAME OVER", storage.font50, WHITE, 250, 300)
             seconds = (pygame.time.get_ticks() - start_ticks) / 1000
             # когда прошло три секунды, то перейти на главный экран
             if seconds > 3:
@@ -544,16 +627,20 @@ while running:
                 Tv.on_animation = True
                 main_screen.in_main_screen = True
     # если сейчас на главном экране
-    if main_screen.in_main_screen:
-        main_screen.update()
-        screen.blit(main_screen.image, main_screen.rect)
+    if main_screen.in_main_screen | about_us.in_view:
+        if main_screen.in_main_screen:
+            main_screen.update()
+            main_screen.draw()
+        if about_us.in_view:
+            about_us.draw()
         GAME_STARTED = False
         GAME_OVER = False
     # обновляем пользовательский интерфейс(анимация телевизора, громкость звука, FPS)
     Tv.update()
     sound_mixer.update()
     screen.blit(Tv.image, Tv.rect)
-    print_text(str(int(clock.get_fps())), 10, WHITE, 5,5)
+    print_text(str(int(clock.get_fps())), storage.font10, WHITE, 5,5)
+    about_us.update()
     start_button.update()
     exit_button.update()
     sound_up_button.update()
