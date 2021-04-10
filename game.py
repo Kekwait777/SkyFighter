@@ -1,4 +1,5 @@
 # импорт нужных библиотек
+import math
 import os
 import sys
 import webbrowser
@@ -386,14 +387,14 @@ class About_us():
         self.rect = pygame.Rect(940, 385, 160, 20)
         self.in_view = False
         self.authors = [Info_node(x=200, y=100, header="Kira Beznik",
-                                  main=["telegram"],
-                                  links=["https://web.telegram.org/#/im?p=@Maldictiales"]),
+                                  main=["telegram","github"],
+                                  links=["https://web.telegram.org/#/im?p=@Maldictiales","https://github.com/Maldictiales"]),
                         Info_node(x=500, y=300, header="RusKom",
-                                  main=["telegram"],
-                                  links=["https://web.telegram.org/#/im?p=@RusK0m"]),
+                                  main=["telegram","github"],
+                                  links=["https://web.telegram.org/#/im?p=@RusK0m", "https://github.com/RusKom27"]),
                         Info_node(x=200, y=500, header="Miracyber",
-                                  main=["telegram"],
-                                  links=["https://web.telegram.org/#/im?p=@Bruuh228"])]
+                                  main=["telegram","github"],
+                                  links=["https://web.telegram.org/#/im?p=@Bruuh228", "https://github.com/Kekwait777"])]
 
         self.images = [[storage.background, storage.background_rect],
                        [storage.authors_images[0],(400,70, 200, 200)],
