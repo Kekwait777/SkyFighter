@@ -396,7 +396,7 @@ class About_us():
                                   main=["telegram","github"],
                                   links=["https://web.telegram.org/#/im?p=@Bruuh228", "https://github.com/Kekwait777"])]
 
-        self.images = [[storage.background, storage.background_rect],
+        self.images = [[storage.background_credits, storage.background_credits_rect],
                        [storage.authors_images[0],(400,70, 200, 200)],
                        [storage.authors_images[1],(200,270, 200, 200)],
                        [storage.authors_images[2],(400,470, 200, 200)]]
@@ -472,6 +472,10 @@ class Storage:
         self.button_sound_images = load_images("button_sound", 2, 120)
         self.main_screen_images = load_images("main_screen", 38, 0)
         self.authors_images = load_images("chibi", 3, 200)
+        self.background_credits = pygame.image.load(
+            resource_path(os.path.join("venv\\Sprites\\background_credits.png"))).convert_alpha()
+        self.background_credits_rect = self.background_credits.get_rect()
+        self.background_credits_rect.x += 100
         self.live_image = pygame.image.load(resource_path(os.path.join("venv\\Sprites\\", "our_plane_lives.png"))).convert_alpha()
         self.live_image.set_alpha(200)
         self.tv = load_images("TV_", 3, 0)
